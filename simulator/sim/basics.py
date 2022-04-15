@@ -10,7 +10,7 @@ class BasicHost (api.HostEntity):
   Basic host with a ping method
   """
   ENABLE_PONG = True       # Send Pong in reponse to ping?
-  ENABLE_DISCOVERY = True  # Send HostDiscoveryPacket when link goes up?
+  ENABLE_DISCOVERY = False  # Send HostDiscoveryPacket when link goes up?
 
   def ping (self, dst, data=None, color=None):
     """

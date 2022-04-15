@@ -20,6 +20,7 @@ import weakref
 
 import logging
 import traceback
+from collections import defaultdict
 
 class EventLogger (logging.Handler):
   _attributes = [
@@ -378,7 +379,7 @@ class TopoNode (object):
   """ A container for an Entity that connects it to other Entities and
       provides some infrastructure functionality. """
 
-  ENABLE_TTL = True
+  ENABLE_TTL = False
   DEFAULT_CABLE_TYPE = None # Will default to BasicCable
 
   def __repr__ (self):
@@ -388,18 +389,27 @@ class TopoNode (object):
     return "<T:" + str(self.entity) + ">"
 
   def get_ports (self):
-    """ Returns (self, mynum, remote, remotenum) info about ports """
+    """ Returns (self, mynum, remote, remotenum, other_entity) info about ports """
     o = []
     for n,p in enumerate(self.ports):
       if p is not None:
         o.append((self.entity.name,n,p.dstEnt.name,p.dstPort))
     return o
 
+  def get_peer_identity (self, port):
+    """ identity of peer connected via source port """
+    return self.ports[port].dst
+
+  def get_floodmap(self):
+    return self.floodmap
+
   def __init__ (self, numPorts = 0, growPorts =  True):
     self.ports = [None] * numPorts
     self.growPorts = growPorts
     self.entity = None
+    self.floodmap = defaultdict(set)
 
+  # TODO: need better abraction for connected peers, not the low-level cables
   def linkTo (self, topoEntity, cable = None, fillEmpty = True, latency = None):
     """
     You can specify a cable to use in several ways:
@@ -534,6 +544,34 @@ class TopoNode (object):
           p = _duplicate_packet(packet)
           remote.transfer(p)
 
+  def flood(self, packet, in_port=None, ports=[]):
+    # add packet to floodmap
+    
+    str_packet_key = packet.get_packet_key()
+    if in_port is not None:
+      self.floodmap[str_packet_key].add(in_port)
+
+    # now decide who to send it to
+    peers_dont_know = []
+    if not ports:
+      # If ports were not specified, just send to everyone
+      # source ports are mapped by index
+
+      for i, port in enumerate(self.ports):
+        if i not in self.floodmap[str_packet_key]:
+          peers_dont_know.append(i)
+    else:
+      for port in ports:
+        if port not in self.floodmap[str_packet_key]:
+          peers_dont_know.append(port)
+
+    self.send(packet, peers_dont_know, flood=False)
+
+    for p in peers_dont_know:
+      self.floodmap[str_packet_key].add(p)
+    
+    return peers_dont_know
+
 
 def _duplicate_packet (p):
   n = type(p).__new__(type(p))
@@ -588,6 +626,7 @@ def CreateEntity (_name, _kind, *args, **kw):
   def send (packet, port=None, flood=False):
     te.send(packet, port, flood)
   setattr(e, 'send', send)
+
   def set_debug (*args):
     #print(e.name + ':', ' '.join((str(s) for s in args)))
     world.do(events.set_debug,e.name, ' '.join((str(s) for s in args)))
@@ -606,7 +645,7 @@ def CreateEntity (_name, _kind, *args, **kw):
     func(msg, *args, **kw)
   setattr(e, 'log', log)
 
-  for m in ['linkTo', 'unlinkTo', 'disconnect']:
+  for m in ['linkTo', 'unlinkTo', 'disconnect', 'get_peer_identity', 'flood', 'get_ports', 'get_floodmap']:
     setattr(e, m, getattr(te, m))
 
   def remove ():

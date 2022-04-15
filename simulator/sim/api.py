@@ -5,6 +5,7 @@ The main APIs for the simulator
 from __future__ import print_function
 import sim.core as core
 from random import random as rand
+from datetime import datetime
 
 # Non-routable packets may not really have addresses.  We just create a
 # more meaningful name for None for these cases.
@@ -191,7 +192,7 @@ def hsv_to_rgb (h, s, v, a = 1):
 class Packet (object):
   DEFAULT_TTL = 20
 
-  def __init__ (self, dst=NullAddress, src=NullAddress):
+  def __init__ (self, src=NullAddress):
     """
     Base class for all packets
 
@@ -205,8 +206,6 @@ class Packet (object):
     (containing primitive types or more plain 'ol containers containing...).
     """
     self.src = src
-    self.dst = dst
-    self.ttl = self.DEFAULT_TTL # Decremented for each entity we go through.
     self.trace = [] # List of entities we've been sent through.  For debugging.
 
     # When using NetVis, packets are visible, and you can set the color.
@@ -214,6 +213,11 @@ class Packet (object):
     # Each value is between 0 and 1.  alpha of 0 is transparent.  1 is opaque.
     self.outer_color = hsv_to_rgb(rand(), rand()*.8+.2, rand()*.5+.5,.75)
     self.inner_color = [0,0,0,0] # transparent
+
+    # TODO: this is obviously not great, use real unique ID instead (seqnum + signature of originating node)
+
+    dateTimeObj = datetime.now()
+    self.timestamp = dateTimeObj.strftime("%d-%b-%Y-%H:%M:%S.%f")
 
   def _notify_rx (self, srcEnt, srcPort, dstEnt, dstPort, drop):
     """
@@ -232,10 +236,20 @@ class Packet (object):
     pass
 
   def __repr__ (self):
-    return "<%s from %s->%s>" % (self.__class__.__name__,
-                                 get_name(self.src),
-                                 get_name(self.dst))
+    return "<%s from %s>" % (self.__class__.__name__,
+                                 get_name(self.src))
+  def get_packet_key(self):
+    return str(self.src) + "-" + self.timestamp + "-" + self.type
 
+class Transaction (Packet):
+  def __init__ (self, src=NullAddress):
+    super(Transaction,self).__init__(src=src)
+    self.type = "Tx"
+
+class SCPMessage (Packet):
+  def __init__ (self, src=NullAddress):
+    super(SCPMessage,self).__init__(src=src)
+    self.type = "SCP"
 
 class Entity (object):
   """
@@ -339,6 +353,11 @@ class Entity (object):
     This function may appear to be unimplemented, but it does
     in fact work.
     """
+    self.log("SEND default %s" % in_port, level="WARNING")
+    pass
+
+  def flood(self, packet, in_port):
+    self.log("FLOOD default %s" % in_port, level="WARNING")
     pass
 
   def remove (self):

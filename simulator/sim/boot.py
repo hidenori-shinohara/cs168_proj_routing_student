@@ -120,7 +120,7 @@ def main ():
     core.world.start(threaded=False)
 
 
-def pre_options (default_host_type = None, default_switch_type = None,
+def pre_options (default_host_type = None, default_switch_type = None, selective_flooding = False,
                  gui_log = False, console_log = True, debug_startup = True,
                  remote_interface = "web", remote_interface_port = 4444,
                  remote_interface_address = "127.0.0.1", interactive = True,
@@ -150,6 +150,7 @@ def pre_options (default_host_type = None, default_switch_type = None,
 
   sim.config.default_host_type = default_host_type
   sim.config.default_switch_type = default_switch_type
+  sim.config.selective_flooding = selective_flooding
 
   sim.config.remote_interface = remote_interface
   sim.config.remote_interface_port = int(remote_interface_port)

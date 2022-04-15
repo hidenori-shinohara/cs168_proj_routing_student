@@ -16,6 +16,7 @@ class SimConfiguration (object):
   """
   _default_switch_type = None
   _default_host_type = None
+  selective_flooding = False
 
   gui_log = False
   console_log = True
@@ -37,7 +38,7 @@ class SimConfiguration (object):
   @default_switch_type.setter
   def default_switch_type (self, t):
     self._default_switch_type = _find_switch_type(t)
-
+  
   @property
   def default_host_type (self):
     if self._default_host_type: return self._default_host_type
