@@ -6,25 +6,24 @@ from examples import base_node
 class Validator (base_node.BaseNode):
 
   DEFAULT_TIMER_INTERVAL = 1 # Default timer interval.
+  NUM_ROUNDS_TO_SIMULATE = 2
 
   def __init__(self, selective_flooding):
     super(Validator,self).__init__(selective_flooding=selective_flooding)
     self.start_timer()
     self.timer_on = True
+    self.rounds_simulated = 0
 
   def handle_msg(self, packet, in_port):
-
     if isinstance(packet, api.SCPMessage) and packet.get_packet_key() not in self.get_floodmap():
-      # Seeing this for the firstime
-      #self.peer_quality[in_port] += 1
+      # Do something interesting wrt quality
       pass
     elif isinstance(packet, api.Transaction) and packet.get_packet_key() not in self.get_floodmap():
       # How many hops before transaction reached here?
       self.trace.append(len(packet.trace))
-      #api.simlog.info("%s Trace %s, %s", self.name, packet, ','.join(x.name for x in packet.trace))
+      # api.simlog.debug("%s Trace %s, %s", self.name, packet, ','.join(x.name for x in packet.trace))
 
     self.flood(packet, in_port)
-
 
   def start_timer (self, interval = None):
     """
@@ -40,10 +39,9 @@ class Validator (base_node.BaseNode):
     """
     Called periodically to emulate validator emitting an SCP message
     """
-    if self.timer_on:
+    if self.timer_on and self.rounds_simulated < self.NUM_ROUNDS_TO_SIMULATE:
       self.flood(api.SCPMessage(None))
-
-    # evaluate peer quality, make adjustments
+      self.rounds_simulated += 1
 
   def stop_timer (self):
     """

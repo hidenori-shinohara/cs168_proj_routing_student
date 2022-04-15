@@ -12,7 +12,8 @@ class Watcher (base_node.BaseNode):
   NUM_CLUSTERS=3
 
   def get_peers_to_flood_to(self):
-    # api.simlog.info("%s -- Peer quality: %s", self.name, self.peer_quality)
+    # api.simlog.debug("%s Peer quality: %s", self.name, self.peer_quality)
+    
     peers = list(self.peer_quality.items())
 
     if len(peers) == 1:
@@ -43,13 +44,13 @@ class Watcher (base_node.BaseNode):
       idx = np.where(arr == item)[0][0]
       ports.append(peers[idx][0])
 
-
-    # api.simlog.info("Ports to flood: %s", ports)
+    # api.simlog.debug("Flood to ports: %s", ports)
 
     return ports
 
   def handle_msg(self, packet, in_port):
-    #api.simlog.info("%s recv msg %s on port %i", self.name, packet, in_port)
+
+    # api.simlog.debug("%s recv msg %s on port %i", self.name, packet, in_port)
 
     if isinstance(packet, api.Transaction):
       # Forward to nodes based on quality
@@ -57,22 +58,15 @@ class Watcher (base_node.BaseNode):
       if self.SELECTIVE_FLOODING and any(quality > 0 for quality, node in self.peer_quality.values()):
         ports = self.get_peers_to_flood_to()
         peers = self.flood(packet, in_port, ports)
-      # if self.SELECTIVE_FLOODING and any(quality > 0 for quality, node in self.peer_quality.values()):
-      #   sorted_quality = sorted(self.peer_quality.items(), key=lambda elem: elem[1][0], reverse=True)
-      #   new_len = int(math.ceil(len(sorted_quality) * self.PEER_QUALITY_PERCENT_FLOOD / 100))
-      #   sorted_quality = sorted_quality[:new_len]
-      #   ports = [port for port, quality in sorted_quality]
-      #   self.flood(packet, in_port, ports)
       else:
         peers = self.flood(packet, in_port)
 
-      # api.simlog.info("%s Flood %s to %s", self.name, packet, peers)
+      # api.simlog.debug("%s Flood %s to %s", self.name, packet, peers)
 
     elif isinstance(packet, api.SCPMessage):
-      # Increase quality
-      # api.simlog.info("%s Trace %s, %s", self.name, packet, ','.join(x.name for x in packet.trace))
+      # api.simlog.debug("%s Trace %s, %s", self.name, packet, ','.join(x.name for x in packet.trace))
       if packet.get_packet_key() not in self.get_floodmap():
-        # How many hops before SCP message reached here?
+        # How many hops before unique SCP message reached here?
         self.trace.append(len(packet.trace))
 
       # Flood SCP message to everyone

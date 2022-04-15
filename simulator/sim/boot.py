@@ -120,7 +120,7 @@ def main ():
     core.world.start(threaded=False)
 
 
-def pre_options (default_host_type = None, default_switch_type = None, selective_flooding = False,
+def pre_options (default_host_type = None, default_switch_type = None, selective_flooding = False, num_runs = 10,
                  gui_log = False, console_log = True, debug_startup = True,
                  remote_interface = "web", remote_interface_port = 4444,
                  remote_interface_address = "127.0.0.1", interactive = True,
@@ -155,6 +155,7 @@ def pre_options (default_host_type = None, default_switch_type = None, selective
   sim.config.remote_interface = remote_interface
   sim.config.remote_interface_port = int(remote_interface_port)
   sim.config.remote_interface_address = remote_interface_address
+  sim.config.num_runs = int(num_runs)
 
   print(_console_welcome)
 
@@ -185,6 +186,7 @@ def launch_module (name, args):
     _fail("Couldn't load module '%s'", name)
     return None
 
+  # TODO: this is broken, options are wrong types
   launch = getattr(module, "launch", None)
   if launch:
     launch(**args)

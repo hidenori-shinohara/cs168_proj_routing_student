@@ -58,6 +58,7 @@ class DumbCable (Cable):
 
       self.dstEnt.handle_rx(packet, self.dstPort)
 
+    # Transfer after some latency!
     core.world.doLater(self.latency, rx)
 
     core.events.packet(self.srcEnt.name, self.dstEnt.name, packet, self.latency)

@@ -17,6 +17,7 @@ class SimConfiguration (object):
   _default_switch_type = None
   _default_host_type = None
   selective_flooding = False
+  num_runs = 10
 
   gui_log = False
   console_log = True

@@ -3,7 +3,6 @@ from sim.basics import *
 from collections import defaultdict
 import operator
 
-
 class BaseNode (api.Entity):
 
   # better to use clusters
@@ -58,23 +57,20 @@ class BaseNode (api.Entity):
     self.handle_msg(packet, in_port)
 
   def submit_tx(self):
-    self.flood(api.Transaction())
-    self.tx_unique_count += 1  
+    self.handle_rx(api.Transaction(), None)
 
   def report(self, expect_txs=False):
     # First, report hop count
+    # I wonder if calculating shortest paths is slow, we'd have to evaluate all latencies 
     if self.trace:  
       api.simlog.info("%s Average hop count: %.2f", self.name, sum(self.trace) / len(self.trace))
 
-    # Then, report bandwidth (unique vs duplicate traffic)
+    # Report bandwidth utilized network-wide (unique vs duplicate traffic)
     if expect_txs:
       assert self.tx_unique_count > 0, "no unique transactions on %s" % self.name
       
     if self.tx_unique_count > 0:
       api.simlog.info("%s Duplicate TX traffic ratio to total traffic: %.2f (dup: %i, unique: %i)", self.name, self.tx_duplicate_count / (self.tx_unique_count + self.tx_duplicate_count), self.tx_duplicate_count, self.tx_unique_count)
         
-    # TODO: figure out why this doesn't work
     assert self.scp_unique_count > 0, "No unique SCP traffic recorded"
-    # if self.scp_unique_count > 0:
     api.simlog.info("%s Duplicate SCP traffic ratio to total traffic: %.2f (dup: %i, unique: %i)", self.name, self.scp_duplicate_count / (self.scp_unique_count + self.scp_duplicate_count), self.scp_duplicate_count, self.scp_unique_count)
-
