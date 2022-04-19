@@ -8,6 +8,7 @@ from collections import defaultdict
 import random
 import examples.base_node as base_node
 import numpy as np
+from tests import utils
 
 random.seed(0)
 
@@ -35,9 +36,13 @@ def topology_generator_helper(num_validators, selective_flooding):
         validators.append(s)
 
     watchers = []
+    wat_attr = dict()
     for node in graph.nodes():
         s = Watcher.create('wat' + str(node), flood)
         watchers.append(s)
+        wat_attr[node] = s
+
+    nx.set_node_attributes(graph, wat_attr, "entity")
 
     # Connect validators fully regardless of the watcher topology
     def connectAll(nodes):
@@ -76,12 +81,12 @@ def launch(selective_flooding=sim.config.selective_flooding, num_runs=sim.config
         num_to_disconnect = 2
 
         # Random 10 churns
-        for i in range(max_num_runs):
+        for run_num in range(1, max_num_runs + 1):
             for validators, watchers_ref, graph in topology_generator_helper(NUM_VALIDATORS_TIER_1, selective_flooding):
 
                 watchers = watchers_ref.copy()
 
-                api.simlog.info("========== Run %i BEGIN, graph size %i, selective flooding enabled %s ==========", i, len(
+                api.simlog.info("========== Run %i BEGIN, graph size %i, selective flooding enabled %s ==========", run_num, len(
                     validators) + len(watchers), selective_flooding)
 
                 yield 2
@@ -99,10 +104,12 @@ def launch(selective_flooding=sim.config.selective_flooding, num_runs=sim.config
                         for v in validators:
                             v.set_simulate_round(False)
                         # crank a bit to let the transaction propagate
-                        yield 2
+                        yield 10
 
                         # bug in peer quality - quality needs to be recomputed when we disconnect
-                        discon = [2, 5]
+                        # discon = random.sample(range(len(watchers)), num_to_disconnect)
+                        # discon = [2, 5]
+                        discon = [5, 0]
                         to_pop = []
                         for idx in discon:
                             graph.remove_node(idx)
@@ -115,14 +122,19 @@ def launch(selective_flooding=sim.config.selective_flooding, num_runs=sim.config
 
                         rand_wat = random.choice(watchers)
                         rand_val = random.choice(validators)
-                        if not (rand_wat.isConnectedTo(rand_val)):
+
+                        if not nx.is_connected(graph):
+                            for cc in nx.connected_components(graph):
+                                node = cc.pop()
+                                watchers[watchers.index(graph.nodes[node]["entity"])].linkTo(rand_val)
+                        elif not rand_wat.isConnectedTo(rand_val):
                             rand_wat.linkTo(rand_val)
 
                         w = random.choice(watchers)
                         churn = False
 
                         # crank a bit more to complete disconnect/reconnect
-                        yield 3
+                        yield 2
 
                         for v in validators:
                             v.set_simulate_round(True)
@@ -195,7 +207,7 @@ def launch(selective_flooding=sim.config.selective_flooding, num_runs=sim.config
                     v.remove()
 
                 api.simlog.info(
-                    "==================== Run %i DONE ====================", i)
+                    "==================== Run %i DONE ====================", run_num)
 
                 # just count watchers since we haven't implemented flooding policies on validators
                 run_tx_data.append(watchers_total_tx_traffic)

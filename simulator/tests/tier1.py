@@ -7,6 +7,7 @@ import sys
 import networkx as nx
 from collections import defaultdict
 import random
+from tests import utils
 
 random.seed(0)
 
@@ -14,7 +15,6 @@ NUM_TXS_TO_SUBMIT = 20
 NUM_VALIDATORS_TIER_1 = 4
 
 # TODO: refactor topology generator, remove duplication with tests.tier1
-
 
 def topology_generator_helper(num_validators, selective_flooding, num_runs):
 
@@ -43,10 +43,10 @@ def topology_generator_helper(num_validators, selective_flooding, num_runs):
 
         connectAll(validators)
 
-        watchers = defaultdict(Watcher)
-        for i, node in enumerate(graph.nodes()):
-            s = Watcher.create('wat' + str(i), flood)
-            watchers[i] = s
+        watchers = []
+        for node in graph.nodes():
+            s = Watcher.create('wat' + str(node), flood)
+            watchers.append(s)
 
         # Now connect
         for edge in graph.edges.data():
@@ -55,17 +55,16 @@ def topology_generator_helper(num_validators, selective_flooding, num_runs):
             wat1.linkTo(wat2)
 
         # Finally connect to validators
-        watchers_lst = [item[1] for item in watchers.items()]
-        if watchers_lst:
+        if watchers:
             if not nx.is_connected(graph):
                 for cc in nx.connected_components(graph):
                     node = cc.pop()
-                    watchers_lst[node].linkTo(random.choice(validators))
+                    watchers[node].linkTo(random.choice(validators))
 
             else:
-                watchers_lst[0].linkTo(validators[0])
+                random.choice(watchers).linkTo(random.choice(validators))
 
-        yield validators, watchers_lst
+        yield validators, watchers
 
 
 def launch(selective_flooding=sim.config.selective_flooding, num_runs=sim.config.num_runs):
