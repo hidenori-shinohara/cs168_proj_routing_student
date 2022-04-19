@@ -5,11 +5,11 @@ from examples import base_node
 
 class Validator (base_node.BaseNode):
 
-  DEFAULT_TIMER_INTERVAL = 1 # Default timer interval.
-  NUM_ROUNDS_TO_SIMULATE = 2
+  DEFAULT_TIMER_INTERVAL = 2 # Default timer interval.
+  NUM_ROUNDS_TO_SIMULATE = 100
 
-  def __init__(self, selective_flooding):
-    super(Validator,self).__init__(selective_flooding=selective_flooding)
+  def __init__(self, flood_strategy):
+    super(Validator,self).__init__(flood_strategy=flood_strategy)
     self.start_timer()
     self.timer_on = True
     self.rounds_simulated = 0
@@ -40,11 +40,11 @@ class Validator (base_node.BaseNode):
     Called periodically to emulate validator emitting an SCP message
     """
     if self.timer_on and self.rounds_simulated < self.NUM_ROUNDS_TO_SIMULATE:
-      self.flood(api.SCPMessage(None))
+      self.flood(api.SCPMessage(self.rounds_simulated))
       self.rounds_simulated += 1
 
-  def stop_timer (self):
+  def set_simulate_round(self, val):
     """
     Called periodically to emulate validator emitting an SCP message
     """
-    self.timer_on = False
+    self.timer_on = val

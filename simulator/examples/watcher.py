@@ -53,11 +53,18 @@ class Watcher (base_node.BaseNode):
     # api.simlog.debug("%s recv msg %s on port %i", self.name, packet, in_port)
 
     if isinstance(packet, api.Transaction):
-      # Forward to nodes based on quality
 
-      if self.SELECTIVE_FLOODING and any(quality > 0 for quality, node in self.peer_quality.values()):
-        ports = self.get_peers_to_flood_to()
-        peers = self.flood(packet, in_port, ports)
+      # Forward to nodes based on quality
+      if any(quality > 0 for quality, node in self.peer_quality.values()):
+        if self.flood_strategy == base_node.Flooding.SELECTIVE:
+          ports = self.get_peers_to_flood_to()
+          peers = self.flood(packet, in_port, ports)
+        elif self.flood_strategy == base_node.Flooding.PEER_SAMPLING:
+          # TODO: implement
+          pass
+        else:
+          self.flood(packet, in_port)
+
       else:
         peers = self.flood(packet, in_port)
 
@@ -71,4 +78,7 @@ class Watcher (base_node.BaseNode):
 
       # Flood SCP message to everyone
       self.flood(packet, in_port)
+    
+    else:
+      assert False, "unknown message type"
 

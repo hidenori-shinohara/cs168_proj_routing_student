@@ -192,7 +192,7 @@ def hsv_to_rgb (h, s, v, a = 1):
 class Packet (object):
   DEFAULT_TTL = 20
 
-  def __init__ (self, src=NullAddress):
+  def __init__ (self, id, src=NullAddress):
     """
     Base class for all packets
 
@@ -213,6 +213,7 @@ class Packet (object):
     # Each value is between 0 and 1.  alpha of 0 is transparent.  1 is opaque.
     self.outer_color = hsv_to_rgb(rand(), rand()*.8+.2, rand()*.5+.5,.75)
     self.inner_color = [0,0,0,0] # transparent
+    self.id = id
 
     # TODO: this is obviously not great, use real unique ID instead (seqnum + signature of originating node)
 
@@ -239,18 +240,19 @@ class Packet (object):
     return "<%s from %s>" % (self.__class__.__name__,
                                  get_name(self.src))
   def get_packet_key(self):
-    return str(self.src) + "-" + self.timestamp + "-" + self.type
+    # return str(self.src) + "-" + self.timestamp + "-" + self.type
+    return str(self.src) + "-" + self.type + "-" + str(self.id)
 
 class Transaction (Packet):
-  def __init__ (self, src=NullAddress):
-    super(Transaction,self).__init__(src=src)
+  def __init__ (self, id, src=NullAddress):
+    super(Transaction,self).__init__(id=id, src=src)
     # blue
     self.outer_color = [0,0,255]
     self.type = "Tx"
 
 class SCPMessage (Packet):
-  def __init__ (self, src=NullAddress):
-    super(SCPMessage,self).__init__(src=src)
+  def __init__ (self, id, src=NullAddress):
+    super(SCPMessage,self).__init__(id=id,src=src)
     # yellow
     self.outer_color = [255,255,0]
     self.type = "SCP"

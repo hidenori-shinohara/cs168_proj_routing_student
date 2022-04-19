@@ -459,7 +459,7 @@ class TopoNode (object):
     remotePort = getPort(topoEntity)
     localPort = getPort(self)
 
-    world.doLater(0, events.send_link_up, self.entity.name, localPort,
+    world.do(events.send_link_up, self.entity.name, localPort,
              topoEntity.entity.name, remotePort)
 
     if cable[0] is not None:
@@ -508,9 +508,9 @@ class TopoNode (object):
         return True
     return False
 
-  def disconnect (self):
+  def disconnect (self, now=False):
     for p in (port for port in self.ports if port):
-      self.unlinkTo(p.dst)
+      self.unlinkTo(p.dst, now)
 
   def send (self, packet, port, flood = False):
     """
@@ -645,7 +645,7 @@ def CreateEntity (_name, _kind, *args, **kw):
     func(msg, *args, **kw)
   setattr(e, 'log', log)
 
-  for m in ['linkTo', 'unlinkTo', 'disconnect', 'get_peer_identity', 'flood', 'get_ports', 'get_floodmap']:
+  for m in ['linkTo', 'unlinkTo', 'disconnect', 'get_peer_identity', 'flood', 'get_ports', 'get_floodmap', 'isConnectedTo']:
     setattr(e, m, getattr(te, m))
 
   def remove ():
