@@ -85,6 +85,7 @@ class Watcher (base_node.BaseNode):
       self.demandMissing(packet, in_port)
     elif isinstance(packet, api.FloodDemand) and packet.get_packet_key() not in self.get_floodmap():
       # How many hops before the demand reached here?
+      api.simlog.debug("{} received flood demand {}".format(self, packet))
       self.trace.append(len(packet.trace))
       self.fulfillDemand(packet, in_port)
 

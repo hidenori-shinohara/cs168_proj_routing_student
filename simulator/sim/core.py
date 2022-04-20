@@ -537,6 +537,8 @@ class TopoNode (object):
         newPacket.adverts = self.pendingAdvertMsg
         self.pendingAdvertMsg = []
         self.send(newPacket, port, flood)
+        simlog.debug("{} advertising {}".format(self, packet))
+
     # TODO: Implement the timer.
 
 
@@ -595,6 +597,9 @@ class TopoNode (object):
     # TODO: Think about what happens if we know all adverts already.
     # Send it back to in_port since they're the one who told us about these adverts.
     self.send(newPacket, in_port)
+    simlog.debug("{} demanding by sending {}".format(self, newPacket))
+    
+
 
 
 
@@ -602,8 +607,9 @@ class TopoNode (object):
     for advert in packet.adverts:
         if advert in self.shortHashMap:
             self.send(packet, in_port, flood=False)
+            simlog.warning("{} packet = {} => known advert {} from in_port = {} ({})".format(self, packet, advert, in_port, packet.trace))
         else:
-            simlog.warning("packet = {} => unknown advert {} from in_port = {}".format(packet, advert, in_port))
+            simlog.warning("{} packet = {} => unknown advert {} from in_port = {} ({})".format(self, packet, advert, in_port, packet.trace))
 
 
   def flood(self, packet, in_port=None, ports=[]):
@@ -634,7 +640,7 @@ class TopoNode (object):
         peers_to_send_adverts_to = []
         for peer in peers_dont_know:
             # TODO: This ratio is obviously a placeholder and should be a flag.
-            RATIO_ADVERT = 0.5
+            RATIO_ADVERT = 1
             if random.random() < RATIO_ADVERT:
                 peers_to_send_adverts_to.append(peer)
             else:
