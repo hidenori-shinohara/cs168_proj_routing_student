@@ -603,7 +603,7 @@ class TopoNode (object):
         if advert in self.shortHashMap:
             self.send(packet, in_port, flood=False)
         else:
-            simlog.warning("got a request for an advert that I don't know about")
+            simlog.warning("packet = {} => unknown advert {} from in_port = {}".format(packet, advert, in_port))
 
 
   def flood(self, packet, in_port=None, ports=[]):
