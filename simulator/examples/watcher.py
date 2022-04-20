@@ -82,7 +82,7 @@ class Watcher (base_node.BaseNode):
     elif isinstance(packet, api.FloodAdvert) and packet.get_packet_key() not in self.get_floodmap():
       # How many hops before the advert reached here?
       self.trace.append(len(packet.trace))
-#      self.demandMissing(packet, in_port)
+      self.demandMissing(packet, in_port)
     elif isinstance(packet, api.FloodDemand) and packet.get_packet_key() not in self.get_floodmap():
       # How many hops before the demand reached here?
       self.trace.append(len(packet.trace))
