@@ -568,19 +568,14 @@ class TopoNode (object):
           remote.transfer(p)
 
   def demandMissing(self, packet, in_port=None, ports=[]):
-    print ("TopoNode's demandMissing was called")
     for advert in packet.adverts:
-      print("Saw advert {}" % advert)
-      pass
+      print("advert loop in demandMissing")
 
   def fulfillDemand(self, packet, in_port=None, ports=[]):
-    print ("TopoNode's fulfillDemand was called")
     for advert in packet.adverts:
-      print("saw advert {}" % advert)
-      pass
+      print("advert loop in fulfillDemand")
 
   def flood(self, packet, in_port=None, ports=[]):
-    print ("TopoNode's flood was called")
     # add packet to floodmap
     
     str_packet_key = packet.get_packet_key()
@@ -698,7 +693,7 @@ def CreateEntity (_name, _kind, *args, **kw):
     func(msg, *args, **kw)
   setattr(e, 'log', log)
 
-  for m in ['linkTo', 'unlinkTo', 'disconnect', 'get_peer_identity', 'flood', 'get_ports', 'get_floodmap', 'isConnectedTo']:
+  for m in ['linkTo', 'unlinkTo', 'disconnect', 'get_peer_identity', 'flood', 'get_ports', 'get_floodmap', 'isConnectedTo', 'demandMissing', 'fulfillDemand']:
     setattr(e, m, getattr(te, m))
 
   def remove ():
