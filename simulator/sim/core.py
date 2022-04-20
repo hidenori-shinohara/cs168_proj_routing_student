@@ -568,18 +568,19 @@ class TopoNode (object):
           remote.transfer(p)
 
   def demandMissing(self, packet, in_port=None, ports=[]):
-    print("demand missing called")
+    print ("TopoNode's demandMissing was called")
     for advert in packet.adverts:
-      print("hey I got advert {}" % advert)
+      print("Saw advert {}" % advert)
       pass
 
   def fulfillDemand(self, packet, in_port=None, ports=[]):
-    print("fulfillDemand")
+    print ("TopoNode's fulfillDemand was called")
     for advert in packet.adverts:
-      print("hey you got advert {}" % advert)
+      print("saw advert {}" % advert)
       pass
 
   def flood(self, packet, in_port=None, ports=[]):
+    print ("TopoNode's flood was called")
     # add packet to floodmap
     
     str_packet_key = packet.get_packet_key()
