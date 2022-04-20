@@ -23,6 +23,8 @@ import random
 import traceback
 from collections import defaultdict
 
+advertSeq = 0
+
 class EventLogger (logging.Handler):
   _attributes = [
     'created','filename','funcName','levelname','levelno','lineno',
@@ -521,14 +523,17 @@ class TopoNode (object):
   def advertizeMessage (self, packet, port, flood = False):
     # For simplicity, use the current size of the dictionary as the hash.
     advert = len(self.pendingAdvertMsg)
+    self.shortHashMap[advert] = packet
     self.pendingAdvertMsg.append(advert)
     # TODO: In the actual implementation, we use 1024.
     # It's probably better to make this a flag.
     ADVERT_FLUSH_THRESHOLD = 2
     if len(self.pendingAdvertMsg) >= ADVERT_FLUSH_THRESHOLD:
         import sim.api as api
-        # TODO: Obviously it doens't make sense to use the same id all the time.
-        newPacket = api.FloodAdvert(100)
+        # All advert messages have negative seq numbers.
+        global advertSeq
+        advertSeq -= 1
+        newPacket = api.FloodAdvert(advertSeq)
         newPacket.adverts = self.pendingAdvertMsg
         self.pendingAdvertMsg = []
         self.send(newPacket, port, flood)
@@ -569,11 +574,16 @@ class TopoNode (object):
 
   def demandMissing(self, packet, in_port=None, ports=[]):
     for advert in packet.adverts:
-      print("advert loop in demandMissing")
+        if advert in shortHashMap.keys:
+            pass
 
   def fulfillDemand(self, packet, in_port=None, ports=[]):
     for advert in packet.adverts:
-      print("advert loop in fulfillDemand")
+        if advert in shortHashMap.keys:
+            self.send(packet, in_port, flood=False)
+        else:
+            simlog.warning("got a request for an advert that I don't know about")
+
 
   def flood(self, packet, in_port=None, ports=[]):
     # add packet to floodmap
@@ -610,7 +620,6 @@ class TopoNode (object):
                 peers_to_send_records_to.append(peer)
 
         self.send(packet, peers_to_send_records_to, flood=False)
-        # TODO: Send adverts!
         self.advertizeMessage(packet, peers_to_send_adverts_to)
     else:
         self.send(packet, peers_dont_know, flood=False)
