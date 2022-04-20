@@ -19,6 +19,7 @@ import time
 import weakref
 
 import logging
+import random
 import traceback
 from collections import defaultdict
 
@@ -408,6 +409,11 @@ class TopoNode (object):
     self.growPorts = growPorts
     self.entity = None
     self.floodmap = defaultdict(set)
+    # (advert, record)
+    self.shortHashMap = defaultdict(set)
+    # (advert, (peer, timestamp))
+    self.pendingDemands = defaultdict(set)
+    self.pendingAdvertMsg = []
 
   # TODO: need better abraction for connected peers, not the low-level cables
   def linkTo (self, topoEntity, cable = None, fillEmpty = True, latency = None):
@@ -512,6 +518,23 @@ class TopoNode (object):
     for p in (port for port in self.ports if port):
       self.unlinkTo(p.dst, now)
 
+  def advertizeMessage (self, packet, port, flood = False):
+    # For simplicity, use the current size of the dictionary as the hash.
+    advert = len(self.pendingAdvertMsg)
+    self.pendingAdvertMsg.append(advert)
+    # TODO: In the actual implementation, we use 1024.
+    # It's probably better to make this a flag.
+    ADVERT_FLUSH_THRESHOLD = 2
+    if len(self.pendingAdvertMsg) >= ADVERT_FLUSH_THRESHOLD:
+        import sim.api as api
+        # TODO: Obviously it doens't make sense to use the same id all the time.
+        newPacket = api.FloodAdvert(100)
+        newPacket.adverts = self.pendingAdvertMsg
+        self.pendingAdvertMsg = []
+        self.send(newPacket, port, flood)
+    # TODO: Implement the timer.
+
+
   def send (self, packet, port, flood = False):
     """
     Port can be a port number or a list of port numbers.
@@ -544,6 +567,21 @@ class TopoNode (object):
           p = _duplicate_packet(packet)
           remote.transfer(p)
 
+  def demandMissing(self, packet, in_port=None, ports=[]):
+    print("demand missing called")
+    for advert in packet.adverts:
+      print("hey I got advert {}" % advert)
+      pass
+
+  def fulfillDemand(self, packet, in_port=None, ports=[]):
+    print("fulfillDemand")
+    for advert in packet.adverts:
+      print("hey you got advert {}" % advert)
+      pass
+
+  def flood2(self, packet, in_port=None, ports=[]):
+    pass
+
   def flood(self, packet, in_port=None, ports=[]):
     # add packet to floodmap
     
@@ -565,7 +603,24 @@ class TopoNode (object):
         if port not in self.floodmap[str_packet_key]:
           peers_dont_know.append(port)
 
-    self.send(packet, peers_dont_know, flood=False)
+    import sim.api as api
+    if isinstance(packet, api.Transaction):
+        # TODO: Eventually, we'll want to do this with SCP messages.
+        peers_to_send_records_to = []
+        peers_to_send_adverts_to = []
+        for peer in peers_dont_know:
+            # TODO: This ratio is obviously a placeholder and should be a flag.
+            RATIO_ADVERT = 0.5
+            if random.random() < RATIO_ADVERT:
+                peers_to_send_adverts_to.append(peer)
+            else:
+                peers_to_send_records_to.append(peer)
+
+        self.send(packet, peers_to_send_records_to, flood=False)
+        # TODO: Send adverts!
+        self.advertizeMessage(packet, peers_to_send_adverts_to)
+    else:
+        self.send(packet, peers_dont_know, flood=False)
 
     for p in peers_dont_know:
       self.floodmap[str_packet_key].add(p)
@@ -665,6 +720,7 @@ def CreateEntity (_name, _kind, *args, **kw):
   # This is so we can find its TopoNode
   topo[e] = te
   return e
+
 
 def topoOf (entity):
   """ Get TopoNode that contains entity.  Students never use this. """

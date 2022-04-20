@@ -207,6 +207,7 @@ class Packet (object):
     """
     self.src = src
     self.trace = [] # List of entities we've been sent through.  For debugging.
+    self.adverts = [] # List of adverts (for advertising or demanding)
 
     # When using NetVis, packets are visible, and you can set the color.
     # color is a list of red, green, blue, and (optionally) alpha values.
@@ -256,6 +257,20 @@ class SCPMessage (Packet):
     # yellow
     self.outer_color = [255,255,0]
     self.type = "SCP"
+
+class FloodAdvert (Packet):
+  def __init__ (self, id, src=NullAddress):
+    super(FloodAdvert,self).__init__(id=id,src=src)
+    # red
+    self.outer_color = [255,64,0]
+    self.type = "Advert"
+
+class FloodDemand (Packet):
+  def __init__ (self, id, src=NullAddress):
+    super(FloodDemand,self).__init__(id=id,src=src)
+    # green
+    self.outer_color = [0,255,0]
+    self.type = "Demand"
 
 class Entity (object):
   """
@@ -360,6 +375,14 @@ class Entity (object):
     in fact work.
     """
     self.log("SEND default %s" % in_port, level="WARNING")
+    pass
+
+  def demandMissing(self, packet, in_port):
+    self.log("demandMissing default %s" % in_port, level="WARNING")
+    pass
+
+  def fulfillDemand(self, packet, in_port):
+    self.log("fulfillDemand default %s" % in_port, level="WARNING")
     pass
 
   def flood(self, packet, in_port):

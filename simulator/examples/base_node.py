@@ -37,7 +37,7 @@ class BaseNode (api.Entity):
   
   def handle_link_down (self, port):
     """
-    Called by the framework when a link attached to this Entity does down.
+    Called by the framework when a link attached to this Entity goes down.
 
     The port number used by the link is passed in.
     """
