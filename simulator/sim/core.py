@@ -579,9 +579,6 @@ class TopoNode (object):
       print("hey you got advert {}" % advert)
       pass
 
-  def flood2(self, packet, in_port=None, ports=[]):
-    pass
-
   def flood(self, packet, in_port=None, ports=[]):
     # add packet to floodmap
     
