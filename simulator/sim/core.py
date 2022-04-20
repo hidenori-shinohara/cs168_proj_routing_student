@@ -641,7 +641,7 @@ class TopoNode (object):
                 peers_to_send_records_to.append(peer)
 
         self.send(packet, peers_to_send_records_to, flood=False)
-        self.advertizeMessage(packet, peers_to_send_adverts_to)
+        self.advertizeMessage(packet, peers_to_send_adverts_to, flood=False)
     else:
         self.send(packet, peers_dont_know, flood=False)
 

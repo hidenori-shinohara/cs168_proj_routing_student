@@ -17,11 +17,12 @@ class Validator (base_node.BaseNode):
   def handle_msg(self, packet, in_port):
     if isinstance(packet, api.SCPMessage) and packet.get_packet_key() not in self.get_floodmap():
       # Do something interesting wrt quality
-      pass
+      self.flood(packet, in_port)
     elif isinstance(packet, api.Transaction) and packet.get_packet_key() not in self.get_floodmap():
       # How many hops before transaction reached here?
       self.trace.append(len(packet.trace))
       # api.simlog.debug("%s Trace %s, %s", self.name, packet, ','.join(x.name for x in packet.trace))
+      self.flood(packet, in_port)
     elif isinstance(packet, api.FloodAdvert) and packet.get_packet_key() not in self.get_floodmap():
       # How many hops before the advert reached here?
       self.trace.append(len(packet.trace))
@@ -30,8 +31,6 @@ class Validator (base_node.BaseNode):
       # How many hops before the demand reached here?
       self.trace.append(len(packet.trace))
       self.fulfillDemand(packet, in_port)
-
-    self.flood(packet, in_port)
 
   def start_timer (self, interval = None):
     """
