@@ -573,13 +573,34 @@ class TopoNode (object):
           remote.transfer(p)
 
   def demandMissing(self, packet, in_port=None, ports=[]):
+    global advertSeq
+    advertSeq -= 1
+    import sim.api as api
+    newPacket = api.FloodDemand(advertSeq)
     for advert in packet.adverts:
-        if advert in shortHashMap.keys:
+        if advert in self.shortHashMap:
+            # TODO: Record that in_port knows about this hash.
             pass
+        else:
+            if advert in self.pendingDemands:
+                # TODO: There's some logic regarding time.
+                # But for the very first MVP, I'll skip it.
+                pass
+            else:
+                # TODO: There's some logic for optimization.
+                # But for the very first MVP, I'll skip it.
+                # TODO: I probably should add the timestamp here also.
+                self.pendingDemands[advert] = in_port
+                newPacket.adverts.append(advert)
+    # TODO: Think about what happens if we know all adverts already.
+    # Send it back to in_port since they're the one who told us about these adverts.
+    self.send(newPacket, in_port)
+
+
 
   def fulfillDemand(self, packet, in_port=None, ports=[]):
     for advert in packet.adverts:
-        if advert in shortHashMap.keys:
+        if advert in self.shortHashMap:
             self.send(packet, in_port, flood=False)
         else:
             simlog.warning("got a request for an advert that I don't know about")
