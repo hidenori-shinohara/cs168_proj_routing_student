@@ -594,10 +594,14 @@ class TopoNode (object):
                 # TODO: I probably should add the timestamp here also.
                 self.pendingDemands[advert] = in_port
                 newPacket.adverts.append(advert)
-    # TODO: Think about what happens if we know all adverts already.
-    # Send it back to in_port since they're the one who told us about these adverts.
-    self.send(newPacket, in_port)
-    simlog.debug("{} demanding by sending {}".format(self, newPacket))
+    if len(newPacket.adverts) >= 1:
+        # TODO: In the actual SCP code, we don't check if the list of adverts is empty.
+        # Send it back to in_port since they're the one who told us about these adverts.
+        self.send(newPacket, in_port)
+        simlog.debug("{} demanding by sending {}".format(self, newPacket))
+    else:
+        pass
+
     
 
 
