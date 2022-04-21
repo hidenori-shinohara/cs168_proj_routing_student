@@ -238,8 +238,9 @@ class Packet (object):
     pass
 
   def __repr__ (self):
-    return "<%s from %s>" % (self.__class__.__name__,
-                                 get_name(self.src))
+    return "<%s from %s (id = %d)>" % (self.__class__.__name__,
+                                 get_name(self.src),
+                                 self.id)
   def get_packet_key(self):
     # return str(self.src) + "-" + self.timestamp + "-" + self.type
     return str(self.src) + "-" + self.type + "-" + str(self.id)

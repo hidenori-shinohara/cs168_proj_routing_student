@@ -611,9 +611,9 @@ class TopoNode (object):
     for advert in packet.adverts:
         if advert in self.shortHashMap:
             self.send(self.shortHashMap[advert], in_port, flood=False)
-            simlog.warning("{} packet = {} => known advert {} from in_port = {} ({})".format(self, packet, advert, in_port, packet.trace))
+            simlog.warning("{} received a known advert {} with trace = ({}), sending back {}".format(self, advert, packet.trace, self.shortHashMap[advert]))
         else:
-            simlog.warning("{} packet = {} => unknown advert {} from in_port = {} ({})".format(self, packet, advert, in_port, packet.trace))
+            simlog.warning("{} received a packet({}) containing unknown advert {} with trace = ({})".format(self, packet, advert, packet.trace))
 
 
   def flood(self, packet, in_port=None, ports=[]):

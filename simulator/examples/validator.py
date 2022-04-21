@@ -27,10 +27,12 @@ class Validator (base_node.BaseNode):
       # How many hops before the advert reached here?
       self.trace.append(len(packet.trace))
       self.demandMissing(packet, in_port)
+      api.simlog.debug("{} received {} with adverts = {}".format(self, packet, packet.adverts))
     elif isinstance(packet, api.FloodDemand) and packet.get_packet_key() not in self.get_floodmap():
       # How many hops before the demand reached here?
       self.trace.append(len(packet.trace))
       self.fulfillDemand(packet, in_port)
+      api.simlog.debug("{} received demand {} with adverts = {}".format(self, packet, packet.adverts))
 
   def start_timer (self, interval = None):
     """
