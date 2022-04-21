@@ -22,6 +22,7 @@ class BaseNode (api.Entity):
     # We need to initialize everyone
     # map port -> [quality, peer identity]
     # TODO: this base class should not know anything about ports, rely only on identity
+    # TODO: peer quality is too harsh right now, give peer partial credit if duplicate arrives within a small grace period from unique packet
     self.peer_quality = defaultdict(tuple)
 
     # We save trace of all unique traffic we received
@@ -74,12 +75,6 @@ class BaseNode (api.Entity):
           self.scp_unique_count += 1  
     
     increase_count(packet)
-
-    # Fill quality if needed
-    # if not self.peer_quality:
-    #   # Place all peers in the quality map
-    #   for self_name, self_port, peer_name, peer_port in self.get_ports():
-    #       self.peer_quality[self_port] = [0, self.get_peer_identity(self_port)]
 
     # Increase quality
     if isinstance(packet, api.SCPMessage):

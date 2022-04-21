@@ -5,7 +5,7 @@ from examples import base_node
 
 class Validator (base_node.BaseNode):
 
-  DEFAULT_TIMER_INTERVAL = 2 # Default timer interval.
+  DEFAULT_TIMER_INTERVAL = 3 # Default timer interval.
   NUM_ROUNDS_TO_SIMULATE = 100
 
   def __init__(self, flood_strategy):
