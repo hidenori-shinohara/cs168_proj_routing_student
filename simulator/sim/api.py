@@ -262,8 +262,8 @@ class SCPMessage (Packet):
 class FloodAdvert (Packet):
   def __init__ (self, id, src=NullAddress):
     super(FloodAdvert,self).__init__(id=id,src=src)
-    # red
-    self.outer_color = [255,64,0]
+    # pink
+    self.outer_color = [255,0,255]
     self.type = "Advert"
 
 class FloodDemand (Packet):
