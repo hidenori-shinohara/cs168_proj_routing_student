@@ -522,7 +522,7 @@ class TopoNode (object):
 
   def advertizeMessage (self, packet, port, flood = False):
     # For simplicity, use the current size of the dictionary as the hash.
-    advert = len(self.pendingAdvertMsg)
+    advert = len(self.shortHashMap)
     self.shortHashMap[advert] = packet
     self.pendingAdvertMsg.append(advert)
     # TODO: In the actual implementation, we use 1024.
@@ -537,7 +537,10 @@ class TopoNode (object):
         newPacket.adverts = self.pendingAdvertMsg
         self.pendingAdvertMsg = []
         self.send(newPacket, port, flood)
-        simlog.debug("{} advertising {}".format(self, packet))
+        packets = []
+        for a in newPacket.adverts:
+            packets.append(self.shortHashMap[a])
+        simlog.debug("{} sends adverts {} (packets => {})".format(self, newPacket.adverts, packets))
 
     # TODO: Implement the timer.
 
