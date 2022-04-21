@@ -520,9 +520,15 @@ class TopoNode (object):
     for p in (port for port in self.ports if port):
       self.unlinkTo(p.dst, now)
 
+  def getAdvert(self, packet):
+    # For simplicity, use the id of the transaction packet as the advert.
+    # This ensures that the advert for a certain transaction envelope
+    # is the same regardless of who generates the advert.
+    advert = packet.id
+    return advert
+
   def advertizeMessage (self, packet, port, flood = False):
-    # For simplicity, use the current size of the dictionary as the hash.
-    advert = len(self.shortHashMap)
+    advert = self.getAdvert(packet)
     self.shortHashMap[advert] = packet
     self.pendingAdvertMsg.append(advert)
     # TODO: In the actual implementation, we use 1024.
@@ -614,7 +620,7 @@ class TopoNode (object):
     for advert in packet.adverts:
         if advert in self.shortHashMap:
             self.send(self.shortHashMap[advert], in_port, flood=False)
-            simlog.warning("{} received a known advert {} with trace = ({}), sending back {}".format(self, advert, packet.trace, self.shortHashMap[advert]))
+            simlog.debug("{} received a known advert {} with trace = ({}), sending back {}".format(self, advert, packet.trace, self.shortHashMap[advert]))
         else:
             simlog.warning("{} received a packet({}) containing unknown advert {} with trace = ({})".format(self, packet, advert, packet.trace))
 
@@ -642,6 +648,10 @@ class TopoNode (object):
 
     import sim.api as api
     if isinstance(packet, api.Transaction):
+        # Record this packet so we'll recognize the advert.
+        advert = self.getAdvert(packet)
+        self.shortHashMap[advert] = packet
+
         # TODO: Eventually, we'll want to do this with SCP messages.
         peers_to_send_records_to = []
         peers_to_send_adverts_to = []
