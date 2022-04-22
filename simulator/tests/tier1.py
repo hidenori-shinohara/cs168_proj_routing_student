@@ -101,7 +101,7 @@ def launch(selective_flooding=sim.config.selective_flooding, num_runs=sim.config
                 # make sure txs reach everyone
                 for v in validators:
                     v.set_simulate_round(False)
-                yield 10
+                yield 15
 
                 # all flood traffic made it to all nodes
                 def get_count(floodmap, type): return len(
