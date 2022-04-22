@@ -657,14 +657,14 @@ class TopoNode (object):
         peers_to_send_adverts_to = []
         for peer in peers_dont_know:
             # TODO: This ratio is obviously a placeholder and should be a flag.
-            RATIO_ADVERT = 1
+            RATIO_ADVERT = 0
             if random.random() < RATIO_ADVERT:
                 peers_to_send_adverts_to.append(peer)
             else:
                 peers_to_send_records_to.append(peer)
 
-        self.send(packet, peers_to_send_records_to, flood=False)
-        self.advertizeMessage(packet, peers_to_send_adverts_to, flood=False)
+        if len(peers_to_send_records_to) > 0: self.send(packet, peers_to_send_records_to, flood=False)
+        if len(peers_to_send_adverts_to) > 0: self.advertizeMessage(packet, peers_to_send_adverts_to, flood=False)
     else:
         self.send(packet, peers_dont_know, flood=False)
 
