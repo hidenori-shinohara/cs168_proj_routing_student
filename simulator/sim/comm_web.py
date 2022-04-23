@@ -475,6 +475,8 @@ class WebInterface (ThreadingMixIn, HTTPServer):
       'type':'addEntity',
       # TODO: add color to validators later, kind of annoying right now
       'kind':'circle' if kind == 'switch' else 'square',
+      'stroke':[0,255,255],
+      'fill':[0,255,255],
       'label':name,
       })
 

@@ -15,17 +15,18 @@ class Flooding(Enum):
   PEER_SAMPLING=3
 
 class BaseNode (api.Entity):
-  # better to use clusters
-  PEER_QUALITY_PERCENT_FLOOD = 50
 
   def __init__(self, flood_strategy):
     # We need to initialize everyone
     # map port -> [quality, peer identity]
     # TODO: this base class should not know anything about ports, rely only on identity
     # TODO: peer quality is too harsh right now, give peer partial credit if duplicate arrives within a small grace period from unique packet
+    # TODO: link goes down, send poison -> can also be solved with quality decay
     self.peer_quality = defaultdict(tuple)
 
     # We save trace of all unique traffic we received
+    # instead of hops, get total latency
+    self.latency_trace = []
     self.trace = []
 
     self.tx_duplicate_count = 0
@@ -79,6 +80,9 @@ class BaseNode (api.Entity):
     # Increase quality
     if isinstance(packet, api.SCPMessage):
       if packet.get_packet_key() not in self.get_floodmap():
+        self.peer_quality[in_port][0] += 2
+      # Give peer partial credit if the message showed up after a small delay
+      elif (api.current_time() - self.get_floodmap()[packet.get_packet_key()][1]) <= 0.5:
         self.peer_quality[in_port][0] += 1
 
     # Handle message
@@ -92,8 +96,8 @@ class BaseNode (api.Entity):
   def report(self, expect_txs=False):
     # First, report hop count
     # I wonder if calculating shortest paths is slow, we'd have to evaluate all latencies 
-    if self.trace:  
-      api.simlog.info("%s Average hop count: %.2f", self.name, sum(self.trace) / len(self.trace))
+    if self.latency_trace:  
+      api.simlog.info("%s Average hops: %.2f", self.name, sum(self.trace) / len(self.trace))
 
     # Report bandwidth utilized network-wide (unique vs duplicate traffic)
     if expect_txs:

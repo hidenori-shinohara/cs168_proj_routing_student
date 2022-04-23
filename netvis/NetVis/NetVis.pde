@@ -409,6 +409,8 @@ centerSlider.setGroup(adjustWindow);
       else
         n = new CircleNode();
       n.label = msg.getString("label", "");
+      n.strokeColor = getColor(msg, "stroke", 0xffFFffFF);
+      n.fillColor = getColor(msg, "fill", 0);
       //node oldNode = null;
       for (Node oldn : g.nodes)
       {

@@ -19,7 +19,8 @@ class Validator (base_node.BaseNode):
       # Do something interesting wrt quality
       pass
     elif isinstance(packet, api.Transaction) and packet.get_packet_key() not in self.get_floodmap():
-      # How many hops before transaction reached here?
+      # How long did it take for this message to reach us?
+      self.latency_trace.append(api.current_time() - packet.timestamp)
       self.trace.append(len(packet.trace))
       # api.simlog.debug("%s Trace %s, %s", self.name, packet, ','.join(x.name for x in packet.trace))
 

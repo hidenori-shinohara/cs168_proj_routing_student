@@ -37,14 +37,18 @@ class Watcher (base_node.BaseNode):
     # in the background thread, and updated every few minutes
 
     # Now map back to points
-    best_cluster = clusters[max(normalized_centroids)]
-
+    best_cluster = set(clusters[max(normalized_centroids)])
+  
     ports = []
     for item in best_cluster:
-      idx = np.where(arr == item)[0][0]
-      ports.append(peers[idx][0])
+      for idx in np.where(arr == item)[0]:
+        if len(ports) < 3:
+          ports.append(peers[idx][0])
+        else:
+          break
 
-    # api.simlog.debug("Flood to ports: %s", ports)
+    assert len(ports) == len(set(ports)), "duplicate ports %s" % ports
+    #api.simlog.debug("Flood to ports: %s", ports)
 
     return ports
 
@@ -73,7 +77,8 @@ class Watcher (base_node.BaseNode):
     elif isinstance(packet, api.SCPMessage):
       # api.simlog.debug("%s Trace %s, %s", self.name, packet, ','.join(x.name for x in packet.trace))
       if packet.get_packet_key() not in self.get_floodmap():
-        # How many hops before unique SCP message reached here?
+        # How long did it take for this message to reach us?
+        self.latency_trace.append(api.current_time() - packet.timestamp)
         self.trace.append(len(packet.trace))
 
       # Flood SCP message to everyone

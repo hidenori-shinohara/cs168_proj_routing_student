@@ -5,11 +5,9 @@ import sim.api as api
 import sys
 import networkx as nx
 from collections import defaultdict
-import random
 import examples.base_node as base_node
 from tests import utils
 
-random.seed(0)
 
 NUM_TXS_TO_SUBMIT = 20
 NUM_VALIDATORS_TIER_1 = 4
@@ -30,6 +28,9 @@ def launch(selective_flooding=sim.config.selective_flooding, num_runs=sim.config
         run_validator_hops_data = []
         run_watcher_hops_data = []
         num_to_disconnect = 2
+
+        import random
+        random.seed(0)
 
         for validators, watchers_ref, graph in utils.topology_generator(utils.GraphGeneration.ERDOS_RENYI_CONNECTED, selective_flooding, max_num_runs):
 
