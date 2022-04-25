@@ -70,7 +70,7 @@ class BaseNode (api.Entity):
       else:
         if isinstance(packet, api.Transaction):
           self.tx_unique_count += 1  
-        else:
+        if isinstance(packet, api.SCPMessage):
           self.scp_unique_count += 1  
     
     increase_count(packet)
