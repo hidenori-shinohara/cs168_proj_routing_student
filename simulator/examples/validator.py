@@ -17,14 +17,21 @@ class Validator (base_node.BaseNode):
   def handle_msg(self, packet, in_port):
     if isinstance(packet, api.SCPMessage) and packet.get_packet_key() not in self.get_floodmap():
       # Do something interesting wrt quality
-      pass
+      self.flood(packet, in_port)
     elif isinstance(packet, api.Transaction) and packet.get_packet_key() not in self.get_floodmap():
       # How long did it take for this message to reach us?
       self.latency_trace.append(api.current_time() - packet.timestamp)
       self.trace.append(len(packet.trace))
       # api.simlog.debug("%s Trace %s, %s", self.name, packet, ','.join(x.name for x in packet.trace))
+      if self.flood_strategy == base_node.Flooding.SELECTIVE and any(quality > 0 for quality, node in self.peer_quality.values()):
+        ports = self.get_peers_to_flood_to()
+        peers = self.flood(packet, in_port, ports)
+      elif self.flood_strategy == base_node.Flooding.PEER_SAMPLING:
+        # TODO: implement
+        pass
+      else:
+        self.flood(packet, in_port)
 
-    self.flood(packet, in_port)
 
   def start_timer (self, interval = None):
     """

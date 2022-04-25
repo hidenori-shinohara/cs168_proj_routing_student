@@ -58,7 +58,7 @@ def launch(selective_flooding=sim.config.selective_flooding, num_runs=sim.config
                 # make sure txs reach everyone
                 for v in validators:
                     v.set_simulate_round(False)
-                yield 2
+                yield 4
 
                 validators_total_tx_traffic, validators_total_scp_traffic, avg_latency_val, watchers_total_tx_traffic, watchers_total_scp_traffic, avg_latency_wat, avg_hops_val, avg_hops_wat = utils.check_invariants(
                     validators, watchers, NUM_TXS_TO_SUBMIT)
