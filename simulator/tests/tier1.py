@@ -112,6 +112,14 @@ def launch(selective_flooding=sim.config.selective_flooding, num_runs=sim.config
                 num_scp_msgs_generated = validators[0].rounds_simulated * len(
                     validators)
 
+                for watcher in watchers:
+                    # Ensure all transactions made it
+                    floodmap = watcher.get_floodmap()
+                    num_txs = get_count(floodmap, "Tx")
+
+                    assert num_txs == NUM_TXS_TO_SUBMIT, "watcher missing TXs, expected %i, actual %i" % (
+                        NUM_TXS_TO_SUBMIT, num_txs)
+
                 for validator in validators:
                     # Ensure all transactions and SCP messages made it
                     floodmap = validator.get_floodmap()
