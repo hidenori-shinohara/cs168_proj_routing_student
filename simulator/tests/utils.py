@@ -123,12 +123,15 @@ def check_invariants(validators, watchers, total_txs):
 
     for watcher in watchers:
         # Ensure all SCP messages made it to all watchers
-        assert get_count(watcher.get_floodmap(
-        ), "SCP") == num_scp_msgs_generated, "watcher %s missing SCP messages" % watcher.name
-
         # For pull mode, ensure all txns messages made it to all watchers
-        assert get_count(watcher.get_floodmap(
-        ), "Tx") == num_scp_msgs_generated, "watcher %s missing Tx messages" % watcher.name
+        floodmap = watcher.get_floodmap()
+        num_txs = get_count(floodmap, "Tx")
+        num_scp = get_count(floodmap, "SCP")
+
+        assert num_txs == total_txs, "watcher %s missing TXs, expected %i, actual %i" % (
+            watcher.name, total_txs, num_txs)
+        assert num_scp >= num_scp_msgs_generated, "watcher %s missing SCP, expected %i, actual %i" % (
+            watcher.name, num_scp_msgs_generated, num_scp)
 
         # Report traffic stats
         # TODO: add shortest path
