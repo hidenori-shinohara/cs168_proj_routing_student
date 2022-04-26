@@ -3,8 +3,12 @@ from sim.basics import *
 from collections import defaultdict
 import operator
 from enum import Enum
+import math
+import numpy as np
+from scipy.cluster.vq import vq, kmeans, whiten
 
 seq = 0
+NUM_CLUSTERS=3
 
 class Flooding(Enum):
   # basic all-to-all flooding
@@ -15,16 +19,18 @@ class Flooding(Enum):
   PEER_SAMPLING=3
 
 class BaseNode (api.Entity):
-  # better to use clusters
-  PEER_QUALITY_PERCENT_FLOOD = 50
 
   def __init__(self, flood_strategy):
     # We need to initialize everyone
     # map port -> [quality, peer identity]
     # TODO: this base class should not know anything about ports, rely only on identity
+    # TODO: peer quality is too harsh right now, give peer partial credit if duplicate arrives within a small grace period from unique packet
+    # TODO: link goes down, send poison -> can also be solved with quality decay
     self.peer_quality = defaultdict(tuple)
 
     # We save trace of all unique traffic we received
+    # instead of hops, get total latency
+    self.latency_trace = []
     self.trace = []
 
     self.tx_duplicate_count = 0
@@ -34,6 +40,47 @@ class BaseNode (api.Entity):
     self.scp_unique_count = 0
 
     self.flood_strategy = flood_strategy
+
+  def get_peers_to_flood_to(self, redundancy=None):
+    # api.simlog.debug("%s Peer quality: %s", self.name, self.peer_quality)
+    
+    peers = list(self.peer_quality.items())
+
+    if len(peers) == 1:
+      return [port for port, qual in peers]
+
+    quality_lst = [qual[0] for port, qual in peers]
+
+    arr = np.array(quality_lst, dtype=np.float64)
+    arr = whiten(arr)
+    normalized_centroids, distortion = kmeans(arr, min(len(quality_lst), NUM_CLUSTERS))
+
+    clusters = defaultdict(list)
+    for point in arr:
+      best_centroid = normalized_centroids[0]
+      for c in normalized_centroids[1:]:
+        if abs(point - c) < abs(point - best_centroid):
+          best_centroid = c
+      clusters[best_centroid].append(point)
+
+    # Performance computing peer quality every time is expensive. In reality, we probably want this 
+    # in the background thread, and updated every few minutes
+
+    # Now map back to points
+    best_cluster = set(clusters[max(normalized_centroids)])
+  
+    ports = []
+    for item in best_cluster:
+      for idx in np.where(arr == item)[0]:
+        if redundancy is None or len(ports) < redundancy:
+          ports.append(peers[idx][0])
+        else:
+          break
+
+    assert len(ports) == len(set(ports)), "duplicate ports %s" % ports
+    #api.simlog.debug("Flood to ports: %s", ports)
+
+    return ports
   
   def handle_link_down (self, port):
     """
@@ -75,15 +122,12 @@ class BaseNode (api.Entity):
     
     increase_count(packet)
 
-    # Fill quality if needed
-    # if not self.peer_quality:
-    #   # Place all peers in the quality map
-    #   for self_name, self_port, peer_name, peer_port in self.get_ports():
-    #       self.peer_quality[self_port] = [0, self.get_peer_identity(self_port)]
-
     # Increase quality
     if isinstance(packet, api.SCPMessage):
       if packet.get_packet_key() not in self.get_floodmap():
+        self.peer_quality[in_port][0] += 2
+      # Give peer partial credit if the message showed up after a small delay
+      elif (api.current_time() - self.get_floodmap()[packet.get_packet_key()][1]) <= 0.5:
         self.peer_quality[in_port][0] += 1
 
     # Handle message
@@ -97,8 +141,8 @@ class BaseNode (api.Entity):
   def report(self, expect_txs=False):
     # First, report hop count
     # I wonder if calculating shortest paths is slow, we'd have to evaluate all latencies 
-    if self.trace:  
-      api.simlog.info("%s Average hop count: %.2f", self.name, sum(self.trace) / len(self.trace))
+    if self.latency_trace:  
+      api.simlog.info("%s Average hops: %.2f", self.name, sum(self.trace) / len(self.trace))
 
     # Report bandwidth utilized network-wide (unique vs duplicate traffic)
     if expect_txs:

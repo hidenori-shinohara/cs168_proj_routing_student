@@ -215,11 +215,8 @@ class Packet (object):
     self.outer_color = hsv_to_rgb(rand(), rand()*.8+.2, rand()*.5+.5,.75)
     self.inner_color = [0,0,0,0] # transparent
     self.id = id
-
-    # TODO: this is obviously not great, use real unique ID instead (seqnum + signature of originating node)
-
-    dateTimeObj = datetime.now()
-    self.timestamp = dateTimeObj.strftime("%d-%b-%Y-%H:%M:%S.%f")
+    # Record time for accurate latency measurements
+    self.timestamp = current_time()
 
   def _notify_rx (self, srcEnt, srcPort, dstEnt, dstPort, drop):
     """

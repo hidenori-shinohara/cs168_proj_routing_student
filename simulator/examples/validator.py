@@ -5,7 +5,7 @@ from examples import base_node
 
 class Validator (base_node.BaseNode):
 
-  DEFAULT_TIMER_INTERVAL = 2 # Default timer interval.
+  DEFAULT_TIMER_INTERVAL = 3 # Default timer interval.
   NUM_ROUNDS_TO_SIMULATE = 100
 
   def __init__(self, flood_strategy):
@@ -19,10 +19,18 @@ class Validator (base_node.BaseNode):
       # Do something interesting wrt quality
       self.flood(packet, in_port)
     elif isinstance(packet, api.Transaction) and packet.get_packet_key() not in self.get_floodmap():
-      # How many hops before transaction reached here?
+      # How long did it take for this message to reach us?
+      self.latency_trace.append(api.current_time() - packet.timestamp)
       self.trace.append(len(packet.trace))
       # api.simlog.debug("%s Trace %s, %s", self.name, packet, ','.join(x.name for x in packet.trace))
-      self.flood(packet, in_port)
+      if self.flood_strategy == base_node.Flooding.SELECTIVE and any(quality > 0 for quality, node in self.peer_quality.values()):
+        ports = self.get_peers_to_flood_to()
+        peers = self.flood(packet, in_port, ports)
+      elif self.flood_strategy == base_node.Flooding.PEER_SAMPLING:
+        # TODO: implement
+        pass
+      else:
+        self.flood(packet, in_port)
     elif isinstance(packet, api.FloodAdvert) and packet.get_packet_key() not in self.get_floodmap():
       # How many hops before the advert reached here?
       self.trace.append(len(packet.trace))

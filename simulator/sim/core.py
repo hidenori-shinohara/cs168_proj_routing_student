@@ -401,7 +401,7 @@ class TopoNode (object):
 
   def get_peer_identity (self, port):
     """ identity of peer connected via source port """
-    return self.ports[port].dst
+    return self.ports[port].dst.entity
 
   def get_floodmap(self):
     return self.floodmap
@@ -410,7 +410,7 @@ class TopoNode (object):
     self.ports = [None] * numPorts
     self.growPorts = growPorts
     self.entity = None
-    self.floodmap = defaultdict(set)
+    self.floodmap = defaultdict(tuple)
     # (advert, record)
     self.shortHashMap = defaultdict(set)
     # (advert, (peer, timestamp))
@@ -627,23 +627,28 @@ class TopoNode (object):
 
   def flood(self, packet, in_port=None, ports=[]):
     # add packet to floodmap
-    
+    timestamp = sim.api.current_time()
     str_packet_key = packet.get_packet_key()
+
     if in_port is not None:
-      self.floodmap[str_packet_key].add(in_port)
+      if str_packet_key not in self.floodmap:
+        self.floodmap[str_packet_key] = [set([in_port]), timestamp]
+      else:
+        self.floodmap[str_packet_key][0].add(in_port)
 
     # now decide who to send it to
     peers_dont_know = []
+    check_port = lambda port : str_packet_key not in self.floodmap or port not in self.floodmap[str_packet_key][0]
     if not ports:
       # If ports were not specified, just send to everyone
       # source ports are mapped by index
 
       for i, port in enumerate(self.ports):
-        if i not in self.floodmap[str_packet_key]:
+        if check_port(i):
           peers_dont_know.append(i)
     else:
       for port in ports:
-        if port not in self.floodmap[str_packet_key]:
+        if check_port(port):
           peers_dont_know.append(port)
 
     import sim.api as api
@@ -669,8 +674,12 @@ class TopoNode (object):
         self.send(packet, peers_dont_know, flood=False)
 
     for p in peers_dont_know:
-      self.floodmap[str_packet_key].add(p)
+      if str_packet_key not in self.floodmap:
+        self.floodmap[str_packet_key] = [set([p]), timestamp]
+      else:
+        self.floodmap[str_packet_key][0].add(p)
     
+    assert in_port not in peers_dont_know, "invalid flood"
     return peers_dont_know
 
 

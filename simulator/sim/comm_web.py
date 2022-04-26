@@ -128,7 +128,7 @@ class WebHandler (SimpleHTTPRequestHandler, StreamingConnection):
     msg = {
       'type':'initialize',
       'entities':dict([(n.entity.name,
-                   'circle' if isinstance(n.entity, sim.api.HostEntity) else 'square')
+                   'square' if isinstance(n.entity, sim.api.HostEntity) else 'circle')
                   for n in core.topo.values()]),
       #      'entities': {},
       'links':links,
@@ -473,7 +473,10 @@ class WebInterface (ThreadingMixIn, HTTPServer):
     self.send(
       {
       'type':'addEntity',
-      'kind':'square' if kind == 'switch' else 'circle',
+      # TODO: add color to validators later, kind of annoying right now
+      'kind':'circle' if kind == 'switch' else 'square',
+      'stroke':[0,255,255],
+      'fill':[0,255,255],
       'label':name,
       })
 

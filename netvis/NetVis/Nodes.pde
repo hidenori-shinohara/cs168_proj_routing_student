@@ -7,6 +7,7 @@ abstract class Node extends BaseObject
   boolean pinned = false;
   Vector2D pinOffset = new Vector2D();
   String label;
+  int strokeColor = 0xFF000000, fillColor = 0;
 
   abstract double getRadius ();
 
@@ -238,6 +239,13 @@ class CircleNode extends Node
     return (2 + Math.log(max(1,edges.size()))) * 15;
   }
 
+  int fixColor (double alpha, int col)
+  {
+    int a = (col >> 24) & 0xff;
+    a = ((int)(a * alpha)) << 24;
+    return (col & 0xffFFff) | a;
+  }
+
   void draw (Graph g)
   {
     double radius = getRadius();
@@ -250,8 +258,8 @@ class CircleNode extends Node
     }
     else
     {
-      stroke(255,255,255,128);
-      noFill();
+      stroke(fixColor(1,strokeColor));
+      fill(fixColor(1, fillColor));
       radius += 1;
       pos.trunc().drawCircle(radius);
       noStroke();

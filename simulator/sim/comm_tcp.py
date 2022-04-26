@@ -44,7 +44,7 @@ class StreamingConnection (comm.NullInterface):
     msg = {
       'type':'initialize',
       'entities':dict([(n.entity.name,
-                   'circle' if isinstance(n.entity, sim.api.HostEntity) else 'square')
+                   'square' if isinstance(n.entity, sim.api.HostEntity) else 'circle')
                   for n in core.topo.values()]),
       #      'entities': {},
       'links':links,
@@ -232,7 +232,8 @@ class StreamingInterface (object):
     self.send(
       {
       'type':'addEntity',
-      'kind':'square' if kind == 'switch' else 'circle',
+      'kind':'circle' if kind == 'switch' else 'square',
+      'fill':[0,255,555],
       'label':name,
       })
 
