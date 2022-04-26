@@ -135,7 +135,7 @@ class BaseNode (api.Entity):
 
   def submit_tx(self):
     global seq
-    self.handle_rx(api.Transaction(seq), None)
+    self.handle_rx(api.Transaction(seq,self), None)
     seq += 1
 
   def report(self, expect_txs=False):
