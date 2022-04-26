@@ -48,7 +48,7 @@ class Validator (base_node.BaseNode):
     Called periodically to emulate validator emitting an SCP message
     """
     if self.timer_on and self.rounds_simulated < self.NUM_ROUNDS_TO_SIMULATE:
-      self.flood(api.SCPMessage(self.rounds_simulated))
+      self.flood(api.SCPMessage(self.rounds_simulated, self))
       self.rounds_simulated += 1
 
   def set_simulate_round(self, val):
