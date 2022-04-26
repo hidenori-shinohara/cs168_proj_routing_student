@@ -243,14 +243,14 @@ class Packet (object):
     return str(self.src) + "-" + self.type + "-" + str(self.id)
 
 class Transaction (Packet):
-  def __init__ (self, id, src=NullAddress):
+  def __init__ (self, id, src):
     super(Transaction,self).__init__(id=id, src=src)
     # blue
     self.outer_color = [0,0,255]
     self.type = "Tx"
 
 class SCPMessage (Packet):
-  def __init__ (self, id, src=NullAddress):
+  def __init__ (self, id, src):
     super(SCPMessage,self).__init__(id=id,src=src)
     # yellow
     self.outer_color = [255,255,0]
