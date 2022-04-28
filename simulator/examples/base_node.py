@@ -36,6 +36,10 @@ class BaseNode (api.Entity):
     self.tx_duplicate_count = 0
     self.tx_unique_count = 0
 
+    # For now, we use adverts only for transactions.
+    # However, we may use it for scp messages as well.
+    self.tx_advert_count = 0
+
     self.scp_duplicate_count = 0
     self.scp_unique_count = 0
 
@@ -115,6 +119,7 @@ class BaseNode (api.Entity):
         else:
           self.scp_duplicate_count += 1
       else:
+        self.tx_advert_count += 1
         if isinstance(packet, api.Transaction):
           self.tx_unique_count += 1  
         if isinstance(packet, api.SCPMessage):

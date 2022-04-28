@@ -22,8 +22,10 @@ def launch(selective_flooding=sim.config.selective_flooding, num_runs=sim.config
 
         run_number = 1
         run_tx_data_watchers = []
+        run_tx_advert_data_watchers = []
         run_scp_data_watchers = []
         run_tx_data_validators = []
+        run_tx_advert_data_validators = []
         run_scp_data_validators = []
         run_validator_hops_data = []
         run_watcher_hops_data = []      
@@ -61,13 +63,13 @@ def launch(selective_flooding=sim.config.selective_flooding, num_runs=sim.config
 
                 yield 30
 
-                validators_total_tx_traffic, validators_total_scp_traffic, avg_latency_val, watchers_total_tx_traffic, watchers_total_scp_traffic, avg_latency_wat, avg_hops_val, avg_hops_wat = utils.check_invariants(
+                validators_total_tx_traffic, validators_total_scp_traffic, validators_total_tx_advert_traffic, avg_latency_val, watchers_total_tx_traffic, watchers_total_scp_traffic, watchers_total_tx_advert_traffic, avg_latency_wat, avg_hops_val, avg_hops_wat = utils.check_invariants(
                     validators, watchers, NUM_TXS_TO_SUBMIT)
 
-                api.simlog.info("validators %i SCP traffic, %i TX traffic",
-                                validators_total_scp_traffic, validators_total_tx_traffic)
-                api.simlog.info("watchers %i SCP traffic, %i TX traffic",
-                                watchers_total_scp_traffic, watchers_total_tx_traffic)
+                api.simlog.info("validators %i SCP traffic, %i TX traffic, %i TX advert traffic",
+                                validators_total_scp_traffic, validators_total_tx_traffic, validators_total_tx_advert_traffic)
+                api.simlog.info("watchers %i SCP traffic, %i TX traffic, %i TX advert traffic",
+                                watchers_total_scp_traffic, watchers_total_tx_traffic, watchers_total_tx_advert_traffic)
 
                 run_validator_hops_data.append(
                     sum(avg_hops_val) / len(avg_hops_val))
@@ -84,9 +86,11 @@ def launch(selective_flooding=sim.config.selective_flooding, num_runs=sim.config
                     "==================== Run %i DONE ====================", run_number)
 
                 run_tx_data_watchers.append(watchers_total_tx_traffic)
+                run_tx_advert_data_watchers.append(watchers_total_tx_advert_traffic)
                 run_scp_data_watchers.append(watchers_total_scp_traffic)
 
                 run_tx_data_validators.append(validators_total_tx_traffic)
+                run_tx_advert_data_validators.append(validators_total_tx_advert_traffic)
                 run_scp_data_validators.append(validators_total_scp_traffic)
 
                 if run_number == max_num_runs:
@@ -105,6 +109,8 @@ def launch(selective_flooding=sim.config.selective_flooding, num_runs=sim.config
 
             api.simlog.info("Average transactions per RUN on all watchers: %.2f",
                             sum(run_tx_data_watchers) / len(run_tx_data_watchers))
+            api.simlog.info("Average tx adverts per RUN on all watchers: %.2f",
+                            sum(run_tx_advert_data_watchers) / len(run_tx_advert_data_watchers))
             #num = sum(important_watchers_tx) / len(important_watchers_tx) if selective_flooding else sum(run_tx_data_watchers) / len(run_tx_data_watchers) / len(watchers)
             num = sum(important_watchers_tx) / len(important_watchers_tx)
             api.simlog.info("Average transactions per RUN on _IMPORTANT_ watchers: %.2f", num)
@@ -114,6 +120,8 @@ def launch(selective_flooding=sim.config.selective_flooding, num_runs=sim.config
 
             api.simlog.info("Average transactions per validator: %.2f",
                             sum(run_tx_data_validators) / len(run_tx_data_validators))
+            api.simlog.info("Average tx adverts per validator: %.2f",
+                            sum(run_tx_advert_data_validators) / len(run_tx_advert_data_validators))
             api.simlog.info("Average SCP messages per validator: %.2f",
                             sum(run_scp_data_validators) / len(run_scp_data_validators))
             api.simlog.info("---------------------  HOPS   -------------------")
@@ -133,6 +141,15 @@ def launch(selective_flooding=sim.config.selective_flooding, num_runs=sim.config
                 run_validator_latency_data) / len(run_validator_latency_data))
             api.simlog.info("Average latency to reach a watcher %.2f", sum(
                 run_watcher_latency_data) / len(run_watcher_latency_data))
+
+            api.simlog.info("-------------------  BANDWIDTH ------------------")
+            def avg_bandwidth_usage(txs, tx_advts):
+                assert len(txs) == len(tx_advts), "different numbers of tx counts and tx advert counts"
+                return utils.bandwidth_usage(sum(txs), sum(tx_advts)) / len(txs)
+            api.simlog.info("Average tx + tx advert bandwidth usage per RUN on all validators: %.2f bytes",
+                            avg_bandwidth_usage(run_tx_data_validators, run_tx_advert_data_validators))
+            api.simlog.info("Average tx + tx advert bandwidth usage per RUN on all watchers: %.2f bytes",
+                            avg_bandwidth_usage(run_tx_data_watchers, run_tx_advert_data_watchers))
 
             api.simlog.info("\tSUCCESS!")
         # except Exception as e:

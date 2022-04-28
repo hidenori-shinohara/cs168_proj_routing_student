@@ -18,6 +18,18 @@ class Latency(Enum):
     MEDIUM=0.1
     SLOW=0.4
 
+def bandwidth_usage(tx_count, tx_advert_count):
+    # I did little analysis on what the transaction size should be
+    # 1000 is more of a placeholder than anything.
+    tx_size = 1000
+
+    # For now, nodes flush adverts as soon as it has two hashes.
+    # FloodAdvert/FloodDemand with N hashes have 8 * (N + 1) bytes.
+    # This also is more of a placeholder until I write something a bit more reasonable.
+    tx_advert_size = 8 * (2 + 1)
+    return (tx_size * tx_count) + (tx_advert_size * tx_advert_count)
+
+
 def get_count(floodmap, type): 
     return len([item for item in floodmap if type in item])
 
@@ -90,6 +102,7 @@ def check_invariants(validators, watchers, total_txs):
     # all flood traffic made it to all nodes
     validators_total_tx_traffic = 0
     validators_total_scp_traffic = 0
+    validators_total_tx_advert_traffic = 0
     avg_latency_val = []
     avg_hops_val = []
     num_scp_msgs_generated = validators[0].rounds_simulated * len(
@@ -112,12 +125,14 @@ def check_invariants(validators, watchers, total_txs):
             validator.scp_duplicate_count
         validators_total_tx_traffic += validator.tx_unique_count + \
             validator.tx_duplicate_count
+        validators_total_tx_advert_traffic += validator.tx_advert_count
         avg_hops_val.append(
             sum(validator.trace) / len(validator.trace))
         avg_latency_val.append(sum(validator.latency_trace) / len(validator.latency_trace))
 
     watchers_total_tx_traffic = 0
     watchers_total_scp_traffic = 0
+    watchers_total_tx_advert_traffic = 0
     avg_latency_wat = []
     avg_hops_wat = []
 
@@ -138,11 +153,12 @@ def check_invariants(validators, watchers, total_txs):
         watcher.report(False)
         watchers_total_scp_traffic += watcher.scp_unique_count + watcher.scp_duplicate_count
         watchers_total_tx_traffic += watcher.tx_unique_count + watcher.tx_duplicate_count
+        watchers_total_tx_advert_traffic += watcher.tx_advert_count
         avg_hops_wat.append(
             sum(watcher.trace) / len(watcher.trace))
         avg_latency_wat.append(sum(watcher.latency_trace) / len(watcher.latency_trace))
 
-    return validators_total_tx_traffic, validators_total_scp_traffic, avg_latency_val, watchers_total_tx_traffic, watchers_total_scp_traffic, avg_latency_wat, avg_hops_val, avg_hops_wat
+    return validators_total_tx_traffic, validators_total_scp_traffic, validators_total_tx_advert_traffic, avg_latency_val, watchers_total_tx_traffic, watchers_total_scp_traffic, watchers_total_tx_advert_traffic, avg_latency_wat, avg_hops_val, avg_hops_wat
 
 
 def generate_graphs_atlas(num_graphs, rand):
