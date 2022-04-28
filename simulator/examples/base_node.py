@@ -113,13 +113,14 @@ class BaseNode (api.Entity):
   def handle_rx (self, packet, in_port):
     # Record duplicate traffic
     def increase_count(packet):
+      if isinstance(packet, api.FloodAdvert) or isinstance(packet, api.FloodDemand):
+        self.tx_advert_count += 1
       if packet.get_packet_key() in self.get_floodmap():
         if isinstance(packet, api.Transaction):
           self.tx_duplicate_count += 1
         else:
           self.scp_duplicate_count += 1
       else:
-        self.tx_advert_count += 1
         if isinstance(packet, api.Transaction):
           self.tx_unique_count += 1  
         if isinstance(packet, api.SCPMessage):
