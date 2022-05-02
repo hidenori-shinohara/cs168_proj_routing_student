@@ -75,6 +75,7 @@ class BasicCable (DumbCable):
   """
   DEFAULT_QUEUE_SIZE = None # Unlimited
   DEFAULT_TX_TIME = 0.1 # Transmission delay
+  BYTES_PER_SEC = 500 # The number of bytes per second
 
   def __init__ (self, *args, **kw):
     self.size = kw.pop("queue_size", self.DEFAULT_QUEUE_SIZE)
@@ -124,7 +125,7 @@ class BasicCable (DumbCable):
 
   def transfer (self, packet):
     now = core.world.time
-    tx_time = self.tx_time
+    tx_time = self.tx_time + (packet.size / self.BYTES_PER_SEC)
     if self._tx_stop is None or now >= self._tx_stop:
       # Not transferring
       tx_at = now

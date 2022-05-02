@@ -10,6 +10,10 @@ from scipy.cluster.vq import vq, kmeans, whiten
 seq = 0
 NUM_CLUSTERS=3
 
+# The size of a transaction in bytes
+# This is a placeholder
+TX_SIZE = 100
+
 class Flooding(Enum):
   # basic all-to-all flooding
   FLOOD_ALL=1
@@ -141,7 +145,7 @@ class BaseNode (api.Entity):
 
   def submit_tx(self):
     global seq
-    self.handle_rx(api.Transaction(seq, self), None)
+    self.handle_rx(api.Transaction(seq, self, TX_SIZE), None)
     seq += 1
 
   def report(self, expect_txs=False):

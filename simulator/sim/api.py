@@ -192,7 +192,7 @@ def hsv_to_rgb (h, s, v, a = 1):
 class Packet (object):
   DEFAULT_TTL = 20
 
-  def __init__ (self, id, src=NullAddress):
+  def __init__ (self, id, src=NullAddress, size=0):
     """
     Base class for all packets
 
@@ -217,6 +217,9 @@ class Packet (object):
     self.id = id
     # Record time for accurate latency measurements
     self.timestamp = current_time()
+
+    # The size of this packet in bytes.
+    self.size = size
 
   def _notify_rx (self, srcEnt, srcPort, dstEnt, dstPort, drop):
     """
@@ -243,8 +246,8 @@ class Packet (object):
     return str(self.src) + "-" + self.type + "-" + str(self.id)
 
 class Transaction (Packet):
-  def __init__ (self, id, src):
-    super(Transaction,self).__init__(id=id, src=src)
+  def __init__ (self, id, src, size):
+    super(Transaction,self).__init__(id=id, src=src, size=size)
     # blue
     self.outer_color = [0,0,255]
     self.type = "Tx"
@@ -257,15 +260,15 @@ class SCPMessage (Packet):
     self.type = "SCP"
 
 class FloodAdvert (Packet):
-  def __init__ (self, id, src=NullAddress):
-    super(FloodAdvert,self).__init__(id=id,src=src)
+  def __init__ (self, id, src, size):
+    super(FloodAdvert,self).__init__(id=id,size=size)
     # pink
     self.outer_color = [255,0,255]
     self.type = "Advert"
 
 class FloodDemand (Packet):
-  def __init__ (self, id, src=NullAddress):
-    super(FloodDemand,self).__init__(id=id,src=src)
+  def __init__ (self, id, src, size):
+    super(FloodDemand,self).__init__(id=id, src=src, size=size)
     # green
     self.outer_color = [0,255,0]
     self.type = "Demand"
