@@ -539,7 +539,7 @@ class TopoNode (object):
         # All advert messages have negative seq numbers.
         global advertSeq
         advertSeq -= 1
-        newPacket = api.FloodAdvert(advertSeq)
+        newPacket = api.FloodAdvert(advertSeq, self, 8 * (ADVERT_FLUSH_THRESHOLD + 1))
         newPacket.adverts = self.pendingAdvertMsg
         self.pendingAdvertMsg = []
         self.send(newPacket, port, flood)
@@ -587,7 +587,7 @@ class TopoNode (object):
     global advertSeq
     advertSeq -= 1
     import sim.api as api
-    newPacket = api.FloodDemand(advertSeq)
+    demands = []
     for advert in packet.adverts:
         if advert in self.shortHashMap:
             # TODO: Record that in_port knows about this hash.
@@ -602,8 +602,10 @@ class TopoNode (object):
                 # But for the very first MVP, I'll skip it.
                 # TODO: I probably should add the timestamp here also.
                 self.pendingDemands[advert] = in_port
-                newPacket.adverts.append(advert)
-    if len(newPacket.adverts) >= 1:
+                demands.append(advert)
+    if len(demands) >= 1:
+        newPacket = api.FloodDemand(advertSeq, self, 8 * (len(demands) + 1))
+        newPacket.adverts = demands
         # TODO: In the actual SCP code, we don't check if the list of adverts is empty.
         # Send it back to in_port since they're the one who told us about these adverts.
         self.send(newPacket, in_port)
@@ -662,7 +664,7 @@ class TopoNode (object):
         peers_to_send_adverts_to = []
         for peer in peers_dont_know:
             # TODO: This ratio is obviously a placeholder and should be a flag.
-            RATIO_ADVERT = 0
+            RATIO_ADVERT = 1
             if random.random() < RATIO_ADVERT:
                 peers_to_send_adverts_to.append(peer)
             else:
