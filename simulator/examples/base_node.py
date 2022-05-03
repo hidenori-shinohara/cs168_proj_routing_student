@@ -11,8 +11,7 @@ seq = 0
 NUM_CLUSTERS=3
 
 # The size of a transaction in bytes
-# This is a placeholder
-TX_SIZE = 100
+TX_SIZE = 500
 
 class Flooding(Enum):
   # basic all-to-all flooding

@@ -19,9 +19,7 @@ class Latency(Enum):
     SLOW=0.4
 
 def bandwidth_usage(tx_count, tx_advert_count):
-    # I did little analysis on what the transaction size should be
-    # 1000 is more of a placeholder than anything.
-    tx_size = 1000
+    tx_size = 500
 
     # For now, nodes flush adverts as soon as it has two hashes.
     # FloodAdvert/FloodDemand with N hashes have 8 * (N + 1) bytes.
